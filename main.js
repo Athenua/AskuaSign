@@ -39,7 +39,7 @@ const domain = process.env.Domain || "https://sign.askua.ovh";
 
 const client = new MongoClient(mongourl);
 
-async function storeCert(req, res, uuid) {
+async function storeCert(res, uuid) {
     await client.connect();
     const DB = client.db('AskuaSign');
     const DUsers = DB.collection('Stored');
@@ -57,10 +57,6 @@ async function signApp(uuid, res, req, store) {
     const DUsers = await DB.collection('Stored');
 
     let token = req?.cookies?.token;
-    let passwordtoken = req?.cookies?.nya;
-
-    var signedtoken = verify(passwordtoken, jwttoken);
-
     let ouuid;
 
     if(token) {
@@ -74,15 +70,16 @@ async function signApp(uuid, res, req, store) {
     if(token && store == "false") {
         res.clearCookie('token');
     }
-    res.clearCookie('nya');
     
     const app = await Apps.findOne({ UUID: uuid });
 
     const appname = app.CustomName;
     const bid = app.BundleID;
+<<<<<<< HEAD
+    const password = app.Password;
+=======
+>>>>>>> 9ae146eb186295ac999fe8ebbeb8de268c5b00aa
 
-    const password = signedtoken.password;
-    
     const appPath = path.join(__dirname, 'files', 'temp', `${uuid}.ipa`);
     const p12Path = path.join(__dirname, 'files', 'certs', `${ouuid ? ouuid : uuid}.p12`);
     const provPath = path.join(__dirname, 'files', 'certs', `${ouuid ? ouuid : uuid}.mobileprovision`);
@@ -99,7 +96,7 @@ async function signApp(uuid, res, req, store) {
     await fs.writeFileSync(plistPath, plist);
 }
 
-async function uploadApp(app, p12, prov, bname, bid, uuid, store, req, res)
+async function uploadApp(app, p12, prov, bname, bid, uuid, store, res, password)
 {
     const appPath = path.join(__dirname, 'files', 'temp', `${uuid}.ipa`);
     const p12Path = path.join(__dirname, 'files', 'certs', `${uuid}.p12`);
@@ -110,6 +107,7 @@ async function uploadApp(app, p12, prov, bname, bid, uuid, store, req, res)
         CustomName: bname,
         Name: `${uuid}.ipa`,
         BundleID: bid,
+        Password: password,
         Expire: moment().add(3, 'days').unix()
     }
 
@@ -144,7 +142,7 @@ async function uploadApp(app, p12, prov, bname, bid, uuid, store, req, res)
                 res.clearCookie('token');
             }
         }else {
-            await storeCert(req, res, uuid);
+            await storeCert(res, uuid);
         }
     }else if(store == "false" && cookie) {
         var meow = await DUsers.findOne({token: cookie});
@@ -202,11 +200,8 @@ router.post('/upload', async (req, res) => {
 
     try {
         const uuid = makeKey(6);
-        const nya = sign({password: password}, jwttoken, { expiresIn: '300s' });
 
-        res.cookie('nya', nya, { maxAge: 31536000 });
-
-        await uploadApp(app, p12, prov, bname, bid, uuid, store, req, res);
+        await uploadApp(app, p12, prov, bname, bid, uuid, store, res, password);
 
         res.json({ status: 'ok', message: "Uploaded!", uuid: uuid});
     } catch (error) {
