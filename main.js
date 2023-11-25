@@ -116,21 +116,13 @@ async function uploadApp(app, p12, prov, bname, bid, uuid, store, req, res, pass
     const Apps = await DB.collection('Apps');
     const DUsers = await DB.collection('Stored');
 
-    // check if app is file or string
     if(typeof app === "object") {
         await app.mv(appPath);
     }else if(typeof app === "string") {
         var data = await axios.get(app, {responseType: 'arraybuffer'});
         await fs.writeFileSync(appPath, data.data);
     }
-
-
-    if(typeof app == "object") {
-        await app.mv(appPath);
-    }else if(typeof app == "string") {
-        var data = await axios.get(app, {responseType: 'arraybuffer'});
-        await fs.writeFileSync(appPath, data.data);
-    }
+  
     var cookie = req?.cookies?.token;
     if(store == "true") {
         if(cookie) {
