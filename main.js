@@ -96,7 +96,7 @@ async function signApp(uuid, res, req, store) {
     await fs.writeFileSync(plistPath, plist);
 }
 
-async function uploadApp(app, p12, prov, bname, bid, uuid, store, res, password)
+async function uploadApp(app, p12, prov, bname, bid, uuid, store, req, res, password)
 {
     const appPath = path.join(__dirname, 'files', 'temp', `${uuid}.ipa`);
     const p12Path = path.join(__dirname, 'files', 'certs', `${uuid}.p12`);
@@ -201,7 +201,7 @@ router.post('/upload', async (req, res) => {
     try {
         const uuid = makeKey(6);
 
-        await uploadApp(app, p12, prov, bname, bid, uuid, store, res, password);
+        await uploadApp(app, p12, prov, bname, bid, uuid, store, req, res, password);
 
         res.json({ status: 'ok', message: "Uploaded!", uuid: uuid});
     } catch (error) {
